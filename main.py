@@ -1,71 +1,111 @@
 import config
 import telebot
-import requests
-from bs4 import BeautifulSoup as BS
-
-
-def formatFilmName(filmName):
-    for symb in filmName:
-        if symb == ' ':
-            filmName = filmName.replace(symb, '+')
-        if symb == '+':
-            filmName = filmName.replace(symb, '%2B')
-    return filmName
-
-def getFindFilmRefIMDB(filmName):
-    return ('https://www.imdb.com/find?q=' + filmName + '&ref_=nv_sr_sm')
-
-def getFindFilmRefKP(filmName):
-    return ('https://www.kinopoisk.ru/index.php?kp_query=' + filmName)
-
-
-def getFilmRefIMDB(filmRef):
-    r = requests.get(filmRef)
-    html = BS(r.content, 'html.parser')
-    for elem in html.select('#main'):
-        ref = elem.select('.result_text')[0].a['href']
-    return 'https://www.imdb.com' + ref
-
-def getFilmRefKP(filmRef):
-    r = requests.get(filmRef)
-    html = BS(r.content, 'html.parser')
-    for elem in html.select('#block_left_pad'):
-        ref = elem.select('.search_results .name')[0].a['data-url']
-    return 'https://www.kinopoisk.ru' + ref
-
-def getRaitingIMDB(filmRef):
-    r = requests.get(filmRef)
-    html = BS(r.content, 'html.parser')
-    print(filmRef)
-    for elem in html.select('#__next'):
-        return elem.select('.ipc-button__text .AggregateRatingButton__RatingScore-sc-1ll29m0-1')[0].text
-
-def getRaitingKP(filmRef):
-    r = requests.get(filmRef)
-    html = BS(r.content, 'html.parser')
-    #print(html.text)
-    print(filmRef)
-    for elem in html.select('#__next'):
-        return elem.select('.film-rating-value')[0].text
-
-def print_raiting(message):
-    film = formatFilmName(message.text)
-    refIMDB = getFindFilmRefIMDB(film)
-    refKP = getFindFilmRefKP(film)
-    bot.send_message(message.chat.id, 'Рейтинг на IMDB - ' + getRaitingIMDB(getFilmRefIMDB(refIMDB))
-                     + '\nРейтинг на кинопоиске - ' + getRaitingKP(getFilmRefKP(refKP)))
-    pass
-
-filmName = "Крестный отец"
-film = formatFilmName(filmName)
-ref = getFindFilmRefKP(film)
-print(getRaitingKP(getFilmRefKP(ref)))
+import filmTop as FT
+import utilities as util
+import IMDButilities as IMDB
+import KPutilities as KP
 
 bot = telebot.TeleBot(config.token)
+
+def printGenresTop(message):
+    genre = 'Romance'
+    if (message.text == '1'):
+        genre = 'Romance'
+    elif (message.text == '2'):
+        genre = 'Drama'
+    elif (message.text == '3'):
+        genre = 'Comedy'
+    elif (message.text == '4'):
+        genre = 'Crime'
+    elif (message.text == '5'):
+        genre = 'Family'
+    elif (message.text == '6'):
+        genre = 'Mystery'
+    elif (message.text == '7'):
+        genre = 'Fantasy'
+    elif (message.text == '8'):
+        genre = 'Action'
+    elif (message.text == '9'):
+        genre = 'Thriller'
+    elif (message.text == '10'):
+        genre = 'Short'
+    elif (message.text == '11'):
+        genre = 'Adventure'
+    elif (message.text == '12'):
+        genre = 'Animation'
+    elif (message.text == '13'):
+        genre = 'Music'
+    elif (message.text == '14'):
+        genre = 'Sci-Fi'
+    elif (message.text == '15'):
+        genre = 'History'
+    elif (message.text == '16'):
+        genre = 'Musical'
+    elif (message.text == '17'):
+        genre = 'Horror'
+    elif (message.text == '18'):
+        genre = 'War'
+    elif (message.text == '19'):
+        genre = 'Sport'
+    else:
+        bot.send_message(message.chat.id, 'Попробуй вбить только цифру от 1 до 19')
+        bot.register_next_step_handler(message, printGenresTop)
+        return
+    filmList = FT.getGenresTop(genre)
+    bot.send_message(message.chat.id, filmList)
+
+def printYearTop(message):
+    filmList = FT.getYearTop(message.text)
+    bot.send_message(message.chat.id, filmList)
+
+def print_top(message):
+    if message.text == '1':
+        bot.send_message(message.chat.id, FT.getAllTop())
+        return
+    if message.text == '2':
+        send = bot.send_message(message.chat.id, 'Введите год')
+        bot.register_next_step_handler(send, printYearTop)
+        return
+    if message.text == '3':
+        send = bot.send_message(message.chat.id, 'Выберите жанр(введите только цифру):\n\n'
+                                                 '1)Романтика\n'
+                                                 '2)Драма\n'
+                                                 '3)Комедия\n'
+                                                 '4)Преступление\n'
+                                                 '5)Семейный\n'
+                                                 '6)Мистика\n'
+                                                 '7)Фантастика\n'
+                                                 '8)Экшн\n'
+                                                 '9)Триллеры\n'
+                                                 '10)Короткие\n'
+                                                 '11)Приключение\n'
+                                                 '12)Анимационные\n'
+                                                 '13)Музыкальные\n'
+                                                 '14)Научная фантастика\n'
+                                                 '15)Исторические\n'
+                                                 '16)Мюзиклы\n'
+                                                 '17)Хорроры\n'
+                                                 '18)Военные\n'
+                                                 '19)Спортивные\n')
+        bot.register_next_step_handler(send, printGenresTop)
+        return
+    bot.send_message(message.chat.id, 'Попробуй вбить только цифру: 1, 2 или 3')
+    bot.register_next_step_handler(message, print_top)
+
+
+def print_raiting(message):
+    film = util.formatFilmName(message.text)
+    refIMDB = IMDB.getFindFilmRefIMDB(film)
+    refKP = KP.getFindFilmRefKP(film)
+    bot.send_message(message.chat.id, 'Рейтинг на IMDB - ' + IMDB.getRaitingIMDB(IMDB.getFilmRefIMDB(refIMDB))
+                     + '\nРейтинг на кинопоиске - ' + KP.getRaitingKP(KP.getFilmRefKP(refKP)))
+    pass
+
 
 @bot.message_handler(commands=['help'])
 def send_welcome(message):
     bot.reply_to(message, "Список команд:")
+
 
 @bot.message_handler(commands=['getRaiting'])
 def _command_(message):
@@ -73,11 +113,13 @@ def _command_(message):
     bot.register_next_step_handler(message, print_raiting)
 
 
-
 @bot.message_handler(commands=['topFilm'])
-def send_welcome(message):
-    bot.reply_to(message, "Вот твой список фильмов:")
+def _command_(message):
+    bot.send_message(message.chat.id, "Чтобы получить топ фильмов за все время напишите \"1\"\n"
+                                      "Чтобы получить топ фильмов по годам напишите \"2\"\n"
+                                      "Чтобы получить топ фильмов по жанрам напишите \"3\"\n")
+    bot.register_next_step_handler(message, print_top)
+
 
 if __name__ == '__main__':
     bot.polling(none_stop=True)
-
