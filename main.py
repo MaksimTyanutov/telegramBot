@@ -93,12 +93,14 @@ def print_top(message):
     bot.register_next_step_handler(message, print_top)
 
 
-def print_raiting(message):
+def print_film_info(message):
     film = util.formatFilmName(message.text)
-    refIMDB = IMDB.getFindFilmRefIMDB(film)
-    refKP = KP.getFindFilmRefKP(film)
-    bot.send_message(message.chat.id, 'Рейтинг на IMDB - ' + IMDB.getRaitingIMDB(IMDB.getFilmRefIMDB(refIMDB))
-                     + '\nРейтинг на кинопоиске - ' + KP.getRaitingKP(KP.getFilmRefKP(refKP)))
+    ref_IMDB = IMDB.getFilmRefIMDB(IMDB.getFindFilmRefIMDB(film))
+    ref_KP = KP.getFilmRefKP(KP.getFindFilmRefKP(film))
+    img_url = IMDB.getPhotoIMDB(ref_IMDB)
+    bot.send_photo(message.chat.id, img_url)
+    bot.send_message(message.chat.id, IMDB.getDescriptionIMDB(ref_IMDB) + '\n\nРейтинг на IMDB - ' + IMDB.getRaitingIMDB(ref_IMDB)
+                     + '\nРейтинг на кинопоиске - ' + KP.getRaitingKP(ref_KP))
     pass
 
 
@@ -107,10 +109,10 @@ def send_welcome(message):
     bot.reply_to(message, "Список команд:")
 
 
-@bot.message_handler(commands=['getRaiting'])
+@bot.message_handler(commands=['getFilmInfo'])
 def _command_(message):
     bot.send_message(message.chat.id, "Введите название фильма: ")
-    bot.register_next_step_handler(message, print_raiting)
+    bot.register_next_step_handler(message, print_film_info)
 
 
 @bot.message_handler(commands=['topFilm'])
@@ -119,6 +121,8 @@ def _command_(message):
                                       "Чтобы получить топ фильмов по годам напишите \"2\"\n"
                                       "Чтобы получить топ фильмов по жанрам напишите \"3\"\n")
     bot.register_next_step_handler(message, print_top)
+
+#text = IMDB.getDescriptionIMDB(IMDB.getFilmRefIMDB(IMDB.getFindFilmRefIMDB(util.formatFilmName("Крестный отец"))))
 
 
 if __name__ == '__main__':
