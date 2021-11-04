@@ -4,8 +4,14 @@ import filmTop as FT
 import utilities as util
 import IMDButilities as IMDB
 import KPutilities as KP
+import afisha
+import game
+import time
 
 bot = telebot.TeleBot(config.token)
+
+wrotedMessage = ''
+isWroted = False
 
 def printGenresTop(message):
     genre = 'Romance'
@@ -96,12 +102,25 @@ def print_top(message):
 def print_film_info(message):
     film = util.formatFilmName(message.text)
     ref_IMDB = IMDB.getFilmRefIMDB(IMDB.getFindFilmRefIMDB(film))
-    ref_KP = KP.getFilmRefKP(KP.getFindFilmRefKP(film))
+    global ref_KP
+    try:
+        ref_KP = KP.getFilmRefKP(KP.getFindFilmRefKP(film))
+    except Exception:
+        ref_KP = KP.getFindFilmRefKP(film)
     img_url = IMDB.getPhotoIMDB(ref_IMDB)
     bot.send_photo(message.chat.id, img_url)
     bot.send_message(message.chat.id, IMDB.getDescriptionIMDB(ref_IMDB) + '\n\nРейтинг на IMDB - ' + IMDB.getRaitingIMDB(ref_IMDB)
                      + '\nРейтинг на кинопоиске - ' + KP.getRaitingKP(ref_KP))
     pass
+
+def writeMessage(message):
+    global wrotedMessage
+    global isWroted
+    wrotedMessage = message.text
+    isWroted = True
+    time.sleep(1)
+    isWroted = False
+
 
 
 @bot.message_handler(commands=['help'])
@@ -114,6 +133,27 @@ def _command_(message):
     bot.send_message(message.chat.id, "Введите название фильма: ")
     bot.register_next_step_handler(message, print_film_info)
 
+@bot.message_handler(commands=['getCinemaFilms'])
+def _command_(message):
+    bot.send_message(message.chat.id, afisha.getCinemaFilms())
+
+@bot.message_handler(commands=['startGame'])
+def _command_(message):
+    bot.send_message(message.chat.id, 'Правила игры просты - вы получаете описание фильма и пишите его название')
+    balls = 0
+    for i in range(5):
+        film = game.getRandomFilm()
+        description = IMDB.getDescriptionIMDB(IMDB.getFilmRefIMDB(IMDB.getFindFilmRefIMDB(film)))
+        bot.send_message(message.chat.id, 'Фильм номер ' + str(i + 1) + '\n' + description + '\nНапишите название фильма')
+        bot.register_next_step_handler(message, writeMessage)
+        while isWroted == False:
+            a = 5
+        if wrotedMessage == film:
+            balls += 1
+            bot.send_message(message.chat.id, 'Верно')
+        else:
+            bot.send_message(message.chat.id, 'Неверно\n Это был фильм - ' + film)
+    bot.send_message(message.chat.id, 'Игра закончена, вы угадали ' + str(balls) + ' из 5 фильмов')
 
 @bot.message_handler(commands=['topFilm'])
 def _command_(message):
@@ -123,7 +163,8 @@ def _command_(message):
     bot.register_next_step_handler(message, print_top)
 
 #text = IMDB.getDescriptionIMDB(IMDB.getFilmRefIMDB(IMDB.getFindFilmRefIMDB(util.formatFilmName("Крестный отец"))))
-
+#print(afisha.getCinemaFilms())
+#print(game.getRandomFilm())
 
 if __name__ == '__main__':
     bot.polling(none_stop=True)

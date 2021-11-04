@@ -1,6 +1,6 @@
 import requests
 from bs4 import BeautifulSoup as BS
-import translate
+from googletrans import Translator
 
 def getFindFilmRefIMDB(filmName):
     return ('https://www.imdb.com/find?q=' + filmName + '&ref_=nv_sr_sm')
@@ -19,11 +19,11 @@ def getRaitingIMDB(filmRef):
         return elem.select('.ipc-button__text .AggregateRatingButton__RatingScore-sc-1ll29m0-1')[0].text
 
 def getDescriptionIMDB(filmRef):
+    translator = Translator()
     r = requests.get(filmRef)
     html = BS(r.content, 'html.parser')
-    translator = translate.Translator(to_lang="Russian")
     for elem in html.select('#__next'):
-        return translator.translate(elem.select('.GenresAndPlot__Plot-cum89p-6 .GenresAndPlot__TextContainerBreakpointXS_TO_M-cum89p-0')[0].text)
+        return translator.translate(elem.select('.GenresAndPlot__Plot-cum89p-6 .GenresAndPlot__TextContainerBreakpointXS_TO_M-cum89p-0')[0].text, src= 'en', dest='ru').text
 
 def getPhotoIMDB(filmRef):
     r = requests.get(filmRef)
