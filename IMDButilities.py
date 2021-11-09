@@ -23,7 +23,9 @@ def getDescriptionIMDB(filmRef):
     r = requests.get(filmRef)
     html = BS(r.content, 'html.parser')
     for elem in html.select('#__next'):
-        return translator.translate(elem.select('.GenresAndPlot__Plot-cum89p-6 .GenresAndPlot__TextContainerBreakpointXS_TO_M-cum89p-0')[0].text, src= 'en', dest='ru').text
+        desc = elem.select('.GenresAndPlot__Plot-cum89p-6 .GenresAndPlot__TextContainerBreakpointXS_TO_M-cum89p-0')[0].text
+        desc = desc.removesuffix('... Read all' + '.')
+        return translator.translate(desc, src='en', dest='ru').text
 
 def getPhotoIMDB(filmRef):
     r = requests.get(filmRef)

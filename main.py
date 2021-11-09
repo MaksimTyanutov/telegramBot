@@ -103,14 +103,14 @@ def print_film_info(message):
     film = util.formatFilmName(message.text)
     ref_IMDB = IMDB.getFilmRefIMDB(IMDB.getFindFilmRefIMDB(film))
     global ref_KP
-    try:
+    '''try:
         ref_KP = KP.getFilmRefKP(KP.getFindFilmRefKP(film))
     except Exception:
-        ref_KP = KP.getFindFilmRefKP(film)
+        ref_KP = KP.getFindFilmRefKP(film)'''
     img_url = IMDB.getPhotoIMDB(ref_IMDB)
     bot.send_photo(message.chat.id, img_url)
     bot.send_message(message.chat.id, IMDB.getDescriptionIMDB(ref_IMDB) + '\n\nРейтинг на IMDB - ' + IMDB.getRaitingIMDB(ref_IMDB)
-                     + '\nРейтинг на кинопоиске - ' + KP.getRaitingKP(ref_KP))
+                     + '\nРейтинг на кинопоиске - ') #+ KP.getRaitingKP(ref_KP))
     pass
 
 def writeMessage(message):
@@ -140,7 +140,7 @@ def _command_(message):
 @bot.message_handler(commands=['startGame'])
 def _command_(message):
     bot.send_message(message.chat.id, 'Правила игры просты - вы получаете описание фильма и пишите его название')
-    balls = 0
+    points = 0
     for i in range(5):
         film = game.getRandomFilm()
         description = IMDB.getDescriptionIMDB(IMDB.getFilmRefIMDB(IMDB.getFindFilmRefIMDB(film)))
@@ -148,12 +148,12 @@ def _command_(message):
         bot.register_next_step_handler(message, writeMessage)
         while isWroted == False:
             a = 5
-        if wrotedMessage == film:
-            balls += 1
-            bot.send_message(message.chat.id, 'Верно')
+        if game.compareTexts(film, wrotedMessage):
+            points += 1
+            bot.send_message(message.chat.id, 'Верно - ' + film)
         else:
             bot.send_message(message.chat.id, 'Неверно\n Это был фильм - ' + film)
-    bot.send_message(message.chat.id, 'Игра закончена, вы угадали ' + str(balls) + ' из 5 фильмов')
+    bot.send_message(message.chat.id, 'Игра закончена, вы угадали ' + str(points) + ' из 5 фильмов')
 
 @bot.message_handler(commands=['topFilm'])
 def _command_(message):
@@ -165,6 +165,7 @@ def _command_(message):
 #text = IMDB.getDescriptionIMDB(IMDB.getFilmRefIMDB(IMDB.getFindFilmRefIMDB(util.formatFilmName("Крестный отец"))))
 #print(afisha.getCinemaFilms())
 #print(game.getRandomFilm())
+#print(game.compareTexts("Star wars эпизод VI", "Star wars эпизод 6"))
 
 if __name__ == '__main__':
     bot.polling(none_stop=True)

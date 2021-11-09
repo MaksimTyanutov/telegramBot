@@ -7,6 +7,7 @@ def getFindFilmRefKP(filmName):
 def getFilmRefKP(filmRef):
     r = requests.get(filmRef)
     html = BS(r.content, 'html.parser')
+    ref = ''
     for elem in html.select('#block_left_pad'):
         ref = elem.select('.search_results .name')[0].a['data-url']
     return 'https://www.kinopoisk.ru' + ref
